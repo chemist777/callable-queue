@@ -12,6 +12,11 @@ public class CallableQueue {
     private final int backlog;
     private final Thread[] threads;
 
+    /**
+     *
+     * @param backlog maximum queue size for normal processing
+     * @param workerThreads worker threads count
+     */
     public CallableQueue(int backlog, int workerThreads) {
         this.backlog = backlog;
         this.threads = new Thread[workerThreads];
@@ -26,9 +31,17 @@ public class CallableQueue {
         }
     }
 
+    /**
+     * Submit new job to queue
+     *
+     * @param dateTime
+     * @param callable
+     * @param <V>
+     * @return
+     */
     public <V> CompletableFuture<V> submit(Instant dateTime, Callable<V> callable) {
         CompletableFuture<V> future = new CompletableFuture<>();
-        queue.add(new DelayedTask(callable, dateTime.toEpochMilli(), future));
+        queue.add(new DelayedTask<>(callable, dateTime.toEpochMilli(), future));
         return future;
     }
 
@@ -56,6 +69,7 @@ public class CallableQueue {
                     }
                     if (task != null) {
                         try {
+                            //noinspection unchecked
                             task.resultFuture.complete(task.callable.call());
                         } catch (Exception e) {
                             task.resultFuture.completeExceptionally(e);
